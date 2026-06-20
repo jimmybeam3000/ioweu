@@ -2,3 +2,5 @@
 
 /* NAV FIX */
 nav{position:sticky;top:0;z-index:999;display:grid!important;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0;padding:6px;background:#0b1220}nav button{display:block!important;min-height:46px;font-size:14px}
+
+.arrow{align-self:center;font-size:22px;font-weight:800;color:#60a5fa}.target{align-self:center;padding:12px;border-radius:12px;background:#111827;color:#e5e7eb;font-weight:700}label{display:block;margin:8px 0 5px;color:#93c5fd;font-size:13px;font-weight:700}small{display:block;margin-top:6px;color:#94a3b8}
