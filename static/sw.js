@@ -1,0 +1,1 @@
+const C='ioweu-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['/','/static/style.css','/static/app.js','/manifest.webmanifest','/static/icon.svg']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
