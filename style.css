@@ -204,6 +204,15 @@ small {
   flex: 1;
 }
 
+.contact-submit {
+  display: flex;
+  align-items: end;
+}
+
+.contact-submit button {
+  width: 100%;
+}
+
 .stack {
   display: grid;
   gap: 10px;
@@ -392,6 +401,10 @@ small {
   .row {
     grid-template-columns: 1fr;
     flex-direction: column;
+  }
+
+  .contact-submit {
+    align-items: stretch;
   }
 
   .step-grid {

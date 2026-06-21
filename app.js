@@ -11,6 +11,7 @@ const uiState = {
   exportBundle: null,
   importMessage: "",
   lendMessage: "",
+  profileMessage: "",
   lendKind: "money",
   lendRole: "lend",
   deferredPrompt: null,
@@ -117,6 +118,12 @@ function handleSubmit(event) {
   if (event.target.id === "profile-form") {
     event.preventDefault();
     saveProfile(new FormData(event.target));
+    return;
+  }
+
+  if (event.target.id === "contact-form") {
+    event.preventDefault();
+    addContact(new FormData(event.target));
     return;
   }
 
@@ -501,6 +508,21 @@ function renderProfileView() {
       </form>
     </section>
     <section class="card">
+      <h2>Kontakt hinzufügen</h2>
+      <form id="contact-form" class="stack">
+        <div class="row">
+          <div>
+            <label for="contact-name">Name</label>
+            <input id="contact-name" name="contactName" autocomplete="off" placeholder="z.B. David" required>
+          </div>
+          <div class="contact-submit">
+            <button type="submit">Hinzufügen</button>
+          </div>
+        </div>
+      </form>
+      ${uiState.profileMessage ? `<p class="inline-message success">${escapeHtml(uiState.profileMessage)}</p>` : ""}
+    </section>
+    <section class="card">
       <h2>Kontakte</h2>
       ${
         contactList ||
@@ -606,6 +628,23 @@ function saveProfile(formData) {
   state.profile.name = profileName;
   saveState();
   uiState.importMessage = "";
+  uiState.profileMessage = "Profil gespeichert.";
+  render();
+}
+
+function addContact(formData) {
+  const contactName = String(formData.get("contactName") || "").trim();
+  if (!contactName) {
+    uiState.profileMessage = "Bitte einen Kontaktnamen eintragen.";
+    render();
+    return;
+  }
+
+  const beforeCount = state.contacts.length;
+  saveContactName(contactName);
+  saveState();
+  uiState.profileMessage =
+    state.contacts.length === beforeCount ? "Kontakt war bereits vorhanden." : "Kontakt hinzugefügt.";
   render();
 }
 
