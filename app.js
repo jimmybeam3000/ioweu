@@ -11,6 +11,7 @@ const uiState = {
   exportBundle: null,
   importMessage: "",
   lendMessage: "",
+  lendKind: "money",
   deferredPrompt: null,
 };
 
@@ -132,6 +133,13 @@ function handleSubmit(event) {
 }
 
 function handleChange(event) {
+  if (event.target.id === "kind") {
+    uiState.lendKind = event.target.value === "item" ? "item" : "money";
+    uiState.lendMessage = "";
+    render();
+    return;
+  }
+
   if (event.target.id === "import-file") {
     importFile(event.target.files[0]);
   }
@@ -271,6 +279,12 @@ function renderStartView() {
         <h1>I owe U, ohne Server</h1>
         <p class="hint">Erzeuge eine Anfrage als <code>.iou</code> Datei oder importiere eine Antwort komplett offline.</p>
       </div>
+      <div class="chip-row">
+        <span class="chip">Static Pages</span>
+        <span class="chip">Offline</span>
+        <span class="chip">Keine Links</span>
+        <span class="chip">.iou Dateien</span>
+      </div>
       <div class="hero-grid">
         <div class="metric">
           <small>Ausgehend</small>
@@ -318,6 +332,7 @@ function renderOnboardingCard() {
 }
 
 function renderLendView() {
+  const selectedKind = uiState.lendKind;
   const currentDraft = getCurrentDraft();
   const recipientSuggestions = state.contacts
     .map((contact) => `<option value="${escapeAttribute(contact.name)}"></option>`)
@@ -328,7 +343,7 @@ function renderLendView() {
         <h2>Vorgangscode erzeugt</h2>
         <div class="preview stack">
           <div class="route">${escapeHtml(currentDraft.lenderName)} → ${escapeHtml(currentDraft.recipientName)}</div>
-          <div>${renderValueLine(currentDraft)}</div>
+          <div class="value-line">${renderValueLine(currentDraft)}</div>
           <span class="code">${escapeHtml(currentDraft.operationCode)}</span>
           <small>${currentDraft.kind === "money" ? "Geldanfrage" : "Gegenstandsanfrage"} bereit zum Export.</small>
         </div>
@@ -344,12 +359,18 @@ function renderLendView() {
     <section class="card">
       <h2>Verleiher</h2>
       <p class="hint">1. Art wählen. 2. Empfänger eintragen. 3. Betrag oder Gegenstand erfassen. 4. Vorgangscode erzeugen.</p>
+      <div class="step-grid">
+        <div class="step-card"><strong>1</strong><span>Art</span></div>
+        <div class="step-card"><strong>2</strong><span>Empfänger</span></div>
+        <div class="step-card"><strong>3</strong><span>Wert</span></div>
+        <div class="step-card"><strong>4</strong><span>Export</span></div>
+      </div>
       <form id="lend-form" class="stack">
         <div>
           <label for="kind">Art</label>
           <select id="kind" name="kind">
-            <option value="money">Geld</option>
-            <option value="item">Gegenstand</option>
+            <option value="money"${selectedKind === "money" ? " selected" : ""}>Geld</option>
+            <option value="item"${selectedKind === "item" ? " selected" : ""}>Gegenstand</option>
           </select>
         </div>
         <div class="row">
@@ -364,14 +385,18 @@ function renderLendView() {
           </div>
         </div>
         <div class="row">
-          <div>
+          <div class="${selectedKind === "item" ? "hide" : ""}">
             <label for="amount">Betrag in EUR</label>
             <input id="amount" name="amount" type="number" step="0.01" min="0" placeholder="25.00">
           </div>
-          <div>
+          <div class="${selectedKind === "money" ? "hide" : ""}">
             <label for="item-name">Gegenstand</label>
             <input id="item-name" name="itemName" placeholder="z.B. Kamera">
           </div>
+        </div>
+        <div class="mode-callout">
+          <strong>${selectedKind === "money" ? "Geldfluss" : "Gegenstandsfluss"}</strong>
+          <span>${escapeHtml(state.profile.name || "Verleiher")} → Empfänger</span>
         </div>
         <div>
           <label for="note">Notiz</label>
@@ -379,7 +404,7 @@ function renderLendView() {
         </div>
         <button type="submit">Vorgangscode erzeugen</button>
       </form>
-      ${uiState.lendMessage ? `<p class="hint">${escapeHtml(uiState.lendMessage)}</p>` : ""}
+      ${uiState.lendMessage ? `<p class="inline-message error">${escapeHtml(uiState.lendMessage)}</p>` : ""}
     </section>
     ${draftPreview}
     ${renderExportCard()}
@@ -394,7 +419,7 @@ function renderImportView() {
         <h2>Vorgang prüfen</h2>
         <div class="preview stack">
           <div class="route">${escapeHtml(pendingDocument.lenderName)} → ${escapeHtml(pendingDocument.recipientName)}</div>
-          <div>${renderValueLine(pendingDocument)}</div>
+          <div class="value-line">${renderValueLine(pendingDocument)}</div>
           <span class="code">${escapeHtml(pendingDocument.operationCode)}</span>
           <small>${escapeHtml(pendingDocument.note || "Keine Zusatznotiz")}</small>
         </div>
@@ -414,6 +439,10 @@ function renderImportView() {
     <section class="card">
       <h2>Empfänger</h2>
       <p class="hint">Akzeptiert <code>.iou</code>, <code>.iou.txt</code> und <code>.txt</code>. Anfrage importieren, prüfen und als Antwort wieder exportieren.</p>
+      <div class="import-card">
+        <strong>Datei erhalten?</strong>
+        <span>Einfach importieren, prüfen und direkt als Antwortdatei zurückschicken.</span>
+      </div>
       <form id="import-text-form" class="stack">
         <div>
           <label for="import-text">IOU-Inhalt einfügen</label>
@@ -425,7 +454,7 @@ function renderImportView() {
         </div>
         <input id="import-file" type="file" accept=".iou,.iou.txt,.txt,text/plain" hidden>
       </form>
-      ${uiState.importMessage ? `<p class="hint">${escapeHtml(uiState.importMessage)}</p>` : ""}
+      ${uiState.importMessage ? `<p class="inline-message success">${escapeHtml(uiState.importMessage)}</p>` : ""}
     </section>
     ${pendingDocument ? importReview : ""}
     ${renderExportCard()}
@@ -491,7 +520,7 @@ function renderDocumentCard(document) {
       <div class="item-head">
         <div>
           <div class="route">${escapeHtml(document.lenderName)} → ${escapeHtml(document.recipientName)}</div>
-          <div>${renderValueLine(document)}</div>
+          <div class="value-line">${renderValueLine(document)}</div>
           <span class="code">${escapeHtml(document.operationCode)}</span>
         </div>
         <span class="${statusClass(document.status)}">${escapeHtml(statusLabel(document.status))}</span>
@@ -520,6 +549,10 @@ function renderExportCard() {
     <section class="card">
       <h2>${escapeHtml(uiState.exportBundle.title)}</h2>
       <p class="hint">Die Datei bleibt lokal. Du kannst sie direkt teilen oder herunterladen und dann über WhatsApp, Signal, Telegram oder Mail versenden.</p>
+      <div class="import-card">
+        <strong>${escapeHtml(uiState.exportBundle.fileName)}</strong>
+        <span>Exportiert als reine Textdatei mit der Endung <code>.iou</code>.</span>
+      </div>
       <div class="actions">
         <button type="button" data-action="share-export">Exportieren &amp; Versenden</button>
         <button type="button" class="ghost" data-action="download-export">Datei herunterladen</button>

@@ -159,6 +159,24 @@ small {
   gap: 14px;
 }
 
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 140, 255, 0.24);
+  background: rgba(91, 140, 255, 0.09);
+  color: #d6e5ff;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
 .hero-grid {
   display: grid;
   gap: 10px;
@@ -189,6 +207,31 @@ small {
 .stack {
   display: grid;
   gap: 10px;
+}
+
+.step-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.step-card {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(8, 14, 26, 0.6);
+  border: 1px solid rgba(51, 67, 95, 0.8);
+}
+
+.step-card strong {
+  color: #dbe7ff;
+  font-size: 1rem;
+}
+
+.step-card span {
+  color: var(--mut);
+  font-size: 12px;
 }
 
 .actions {
@@ -223,6 +266,13 @@ small {
 .route {
   font-size: 1.05rem;
   font-weight: 800;
+}
+
+.value-line {
+  margin-top: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f4f8ff;
 }
 
 .code {
@@ -280,6 +330,26 @@ small {
   padding: 14px;
 }
 
+.mode-callout,
+.import-card {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(91, 140, 255, 0.2);
+  background: rgba(91, 140, 255, 0.08);
+}
+
+.mode-callout strong,
+.import-card strong {
+  color: #e8f0ff;
+}
+
+.mode-callout span,
+.import-card span {
+  color: #b9cae5;
+}
+
 .export-box {
   white-space: pre-wrap;
   word-break: break-word;
@@ -297,11 +367,35 @@ small {
   font-size: 0.95rem;
 }
 
+.inline-message {
+  margin: 0;
+  padding: 11px 13px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+}
+
+.inline-message.success {
+  color: #d8ffea;
+  background: rgba(38, 208, 124, 0.12);
+  border-color: rgba(38, 208, 124, 0.28);
+}
+
+.inline-message.error {
+  color: #ffd8d8;
+  background: rgba(255, 107, 107, 0.12);
+  border-color: rgba(255, 107, 107, 0.28);
+}
+
 @media (max-width: 560px) {
   .hero-grid,
   .row {
     grid-template-columns: 1fr;
     flex-direction: column;
+  }
+
+  .step-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .tabs button {
