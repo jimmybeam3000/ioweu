@@ -1,29 +1,62 @@
-# IoweU Offline PWA Slim
+# IoweU
 
-Schlanke Offline-PWA für Android/iOS: lokale Datenhaltung im Browser, User-ID, Freunde, Schulden, Gegenstände, Gruppenausgaben, Export/Import per Text/Datei/QR-Text.
+Schlanke Offline-PWA für GitHub Pages. Keine Frameworks, keine Serverpflicht, nur statische Dateien in Root. Datenaustausch läuft ausschließlich über lokale `.iou` Dateien.
 
-## Start lokal
+## Produktionsziel
+
+- GitHub Pages kompatibel
+- Mobile first
+- Dark mode
+- Offline per Service Worker
+- Keine Daten im Link
+- Import akzeptiert `.iou`, `.iou.txt` und `.txt`
+
+## Nutzerfluss
+
+### Verleiher
+
+1. In `Verleihen` Geld oder Gegenstand wählen.
+2. Empfängername eintragen.
+3. Betrag oder Gegenstand erfassen.
+4. Vorgangscode erzeugen.
+5. `Exportieren & Versenden`.
+6. `.iou` Datei lokal erzeugen.
+7. Datei über WhatsApp, Signal, Telegram, Mail oder AirDrop senden.
+
+### Empfänger
+
+1. App über GitHub Pages öffnen.
+2. Beim Erststart Namen eintragen.
+3. Optional zum Startbildschirm hinzufügen.
+4. Erhaltene `.iou` Datei importieren.
+5. Vorgang prüfen.
+6. Bestätigen oder ablehnen.
+7. Antwort erneut als `.iou` exportieren und zurücksenden.
+
+## Lokal testen
+
+Statische Vorschau:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python -m uvicorn app:app --host 0.0.0.0 --port 8000
+python3 -m http.server 8123
 ```
 
-Dann am Handy öffnen: `http://RECHNER-IP:8000`
+Dann im Browser öffnen:
 
-## Installation am Handy
+```text
+http://127.0.0.1:8123/
+```
 
-Android Chrome: Menü → Zum Startbildschirm hinzufügen.
+Reproduzierbarer Smoke-Test:
 
-iPhone Safari: Teilen → Zum Home-Bildschirm.
+```bash
+bash tests/smoke-static.sh
+```
 
-## Datenaustausch ohne Server
+## Dateien
 
-- Profil/Freund/Transaktion exportieren
-- Text kopieren oder `.ioweu` Datei laden/speichern
-- per WhatsApp/SMS/AirDrop/Mail senden
-- Empfänger importiert den Text oder die Datei
-
-QR ist absichtlich textbasiert vorbereitet: Export-Text kann mit jedem QR-Generator geteilt oder später direkt in der App als QR angezeigt werden.
+- `index.html`: statische GitHub-Pages-App
+- `app.js`: kompletter Offline-Workflow und `.iou` Import/Export
+- `style.css`: mobile-first Dark-UI
+- `sw.js`: Cache für Root-Dateien
+- `manifest.webmanifest`: PWA-Metadaten mit relativen Pfaden
