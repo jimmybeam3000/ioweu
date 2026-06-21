@@ -61,6 +61,11 @@ function handleClick(event) {
   }
 
   const action = actionButton.dataset.action;
+  if (action === "open-lend") {
+    openLendView(actionButton.dataset.role === "borrow" ? "borrow" : "lend");
+    return;
+  }
+
   if (action === "install") {
     promptInstall();
     return;
@@ -269,8 +274,13 @@ function renderInstallState() {
 }
 
 function renderTabs() {
-  document.querySelectorAll("[data-view]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.view === uiState.activeView);
+  document.querySelectorAll(".tabs button").forEach((button) => {
+    const isViewButton = button.dataset.view && button.dataset.view === uiState.activeView;
+    const isLendButton =
+      button.dataset.action === "open-lend" &&
+      uiState.activeView === "lend" &&
+      button.dataset.role === uiState.lendRole;
+    button.classList.toggle("active", Boolean(isViewButton || isLendButton));
   });
 }
 
@@ -378,19 +388,12 @@ function renderLendView() {
       <h2>${isBorrowFlow ? "Ich leihe mir etwas" : "Ich verleihe etwas"}</h2>
       <p class="hint">1. Art wählen. 2. Empfänger eintragen. 3. Betrag oder Gegenstand erfassen. 4. Vorgangscode erzeugen.</p>
       <div class="step-grid">
-        <div class="step-card"><strong>1</strong><span>Richtung</span></div>
-        <div class="step-card"><strong>2</strong><span>Art</span></div>
+        <div class="step-card"><strong>1</strong><span>Art</span></div>
+        <div class="step-card"><strong>2</strong><span>${isBorrowFlow ? "Verleiher" : "Empfänger"}</span></div>
         <div class="step-card"><strong>3</strong><span>Wert</span></div>
         <div class="step-card"><strong>4</strong><span>Export</span></div>
       </div>
       <form id="lend-form" class="stack">
-        <div>
-          <label for="role">Richtung</label>
-          <select id="role" name="role">
-            <option value="lend"${selectedRole === "lend" ? " selected" : ""}>Ich verleihe</option>
-            <option value="borrow"${selectedRole === "borrow" ? " selected" : ""}>Ich leihe mir</option>
-          </select>
-        </div>
         <div>
           <label for="kind">Art</label>
           <select id="kind" name="kind">
@@ -401,11 +404,11 @@ function renderLendView() {
         <div class="row">
           <div>
             <label for="partner-name">${isBorrowFlow ? "Verleihername" : "Verleiher"}</label>
-            <input id="partner-name" name="partnerName" list="contact-suggestions" placeholder="z.B. David" value="${isBorrowFlow ? "" : escapeAttribute(ownName)}" ${isBorrowFlow ? "required" : "readonly"}>
+            <input id="partner-name" name="partnerName" list="contact-suggestions" placeholder="z.B. David" value="${isBorrowFlow ? "" : escapeAttribute(ownName)}" ${isBorrowFlow ? "required" : "readonly"} autocomplete="off" spellcheck="false">
           </div>
           <div>
             <label for="counterparty-name">${isBorrowFlow ? "Empfänger" : "Empfängername"}</label>
-            <input id="counterparty-name" name="counterpartyName" list="contact-suggestions" placeholder="${escapeAttribute(isBorrowFlow ? ownName : "z.B. David")}" value="${isBorrowFlow ? escapeAttribute(ownName) : ""}" ${isBorrowFlow ? "readonly" : "required"}>
+            <input id="counterparty-name" name="counterpartyName" list="contact-suggestions" placeholder="${escapeAttribute(isBorrowFlow ? ownName : "z.B. David")}" value="${isBorrowFlow ? escapeAttribute(ownName) : ""}" ${isBorrowFlow ? "readonly" : "required"} autocomplete="off" spellcheck="false">
           </div>
         </div>
         <datalist id="contact-suggestions">${recipientSuggestions}</datalist>
@@ -617,6 +620,13 @@ function setView(view) {
   render();
 }
 
+function openLendView(role) {
+  uiState.lendRole = role === "borrow" ? "borrow" : "lend";
+  uiState.activeView = "lend";
+  uiState.lendMessage = "";
+  render();
+}
+
 function saveProfile(formData) {
   const profileName = String(formData.get("profileName") || "").trim();
   if (!profileName) {
@@ -677,7 +687,7 @@ function generateDraft(formData) {
 
 function buildDraft(formData) {
   const kind = String(formData.get("kind") || "money");
-  const role = String(formData.get("role") || "lend");
+  const role = uiState.lendRole;
   const partnerName = String(formData.get("partnerName") || "").trim();
   const counterpartyName = String(formData.get("counterpartyName") || "").trim();
   const amount = Number(formData.get("amount") || 0);

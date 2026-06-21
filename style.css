@@ -118,7 +118,7 @@ small {
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 6px;
   margin: 12px 0;
   padding: 6px;
@@ -131,9 +131,11 @@ small {
 .tabs button {
   background: transparent;
   color: var(--mut);
-  min-height: 46px;
-  font-size: 14px;
-  padding: 10px;
+  min-height: 48px;
+  font-size: 13px;
+  padding: 8px 6px;
+  line-height: 1.2;
+  text-wrap: balance;
 }
 
 .tabs button.active {
@@ -412,6 +414,6 @@ small {
   }
 
   .tabs button {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
