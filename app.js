@@ -12,6 +12,7 @@ const uiState = {
   importMessage: "",
   lendMessage: "",
   lendKind: "money",
+  lendRole: "lend",
   deferredPrompt: null,
 };
 
@@ -135,6 +136,13 @@ function handleSubmit(event) {
 function handleChange(event) {
   if (event.target.id === "kind") {
     uiState.lendKind = event.target.value === "item" ? "item" : "money";
+    uiState.lendMessage = "";
+    render();
+    return;
+  }
+
+  if (event.target.id === "role") {
+    uiState.lendRole = event.target.value === "borrow" ? "borrow" : "lend";
     uiState.lendMessage = "";
     render();
     return;
@@ -333,6 +341,9 @@ function renderOnboardingCard() {
 
 function renderLendView() {
   const selectedKind = uiState.lendKind;
+  const selectedRole = uiState.lendRole;
+  const isBorrowFlow = selectedRole === "borrow";
+  const ownName = state.profile.name || "Ich";
   const currentDraft = getCurrentDraft();
   const recipientSuggestions = state.contacts
     .map((contact) => `<option value="${escapeAttribute(contact.name)}"></option>`)
@@ -357,15 +368,22 @@ function renderLendView() {
 
   elements.views.lend.innerHTML = `
     <section class="card">
-      <h2>Verleiher</h2>
+      <h2>${isBorrowFlow ? "Ich leihe mir etwas" : "Ich verleihe etwas"}</h2>
       <p class="hint">1. Art wählen. 2. Empfänger eintragen. 3. Betrag oder Gegenstand erfassen. 4. Vorgangscode erzeugen.</p>
       <div class="step-grid">
-        <div class="step-card"><strong>1</strong><span>Art</span></div>
-        <div class="step-card"><strong>2</strong><span>Empfänger</span></div>
+        <div class="step-card"><strong>1</strong><span>Richtung</span></div>
+        <div class="step-card"><strong>2</strong><span>Art</span></div>
         <div class="step-card"><strong>3</strong><span>Wert</span></div>
         <div class="step-card"><strong>4</strong><span>Export</span></div>
       </div>
       <form id="lend-form" class="stack">
+        <div>
+          <label for="role">Richtung</label>
+          <select id="role" name="role">
+            <option value="lend"${selectedRole === "lend" ? " selected" : ""}>Ich verleihe</option>
+            <option value="borrow"${selectedRole === "borrow" ? " selected" : ""}>Ich leihe mir</option>
+          </select>
+        </div>
         <div>
           <label for="kind">Art</label>
           <select id="kind" name="kind">
@@ -375,15 +393,15 @@ function renderLendView() {
         </div>
         <div class="row">
           <div>
-            <label for="lender-name">Verleiher</label>
-            <input id="lender-name" name="lenderName" value="${escapeAttribute(state.profile.name)}" readonly>
+            <label for="partner-name">${isBorrowFlow ? "Verleihername" : "Verleiher"}</label>
+            <input id="partner-name" name="partnerName" list="contact-suggestions" placeholder="z.B. David" value="${isBorrowFlow ? "" : escapeAttribute(ownName)}" ${isBorrowFlow ? "required" : "readonly"}>
           </div>
           <div>
-            <label for="recipient-name">Empfängername</label>
-            <input id="recipient-name" name="recipientName" list="contact-suggestions" placeholder="z.B. David" required>
-            <datalist id="contact-suggestions">${recipientSuggestions}</datalist>
+            <label for="counterparty-name">${isBorrowFlow ? "Empfänger" : "Empfängername"}</label>
+            <input id="counterparty-name" name="counterpartyName" list="contact-suggestions" placeholder="${escapeAttribute(isBorrowFlow ? ownName : "z.B. David")}" value="${isBorrowFlow ? escapeAttribute(ownName) : ""}" ${isBorrowFlow ? "readonly" : "required"}>
           </div>
         </div>
+        <datalist id="contact-suggestions">${recipientSuggestions}</datalist>
         <div class="row">
           <div class="${selectedKind === "item" ? "hide" : ""}">
             <label for="amount">Betrag in EUR</label>
@@ -396,7 +414,7 @@ function renderLendView() {
         </div>
         <div class="mode-callout">
           <strong>${selectedKind === "money" ? "Geldfluss" : "Gegenstandsfluss"}</strong>
-          <span>${escapeHtml(state.profile.name || "Verleiher")} → Empfänger</span>
+          <span>${isBorrowFlow ? "Andere Person → Ich" : `${escapeHtml(ownName)} → Empfänger`}</span>
         </div>
         <div>
           <label for="note">Notiz</label>
@@ -612,6 +630,7 @@ function generateDraft(formData) {
 
   uiState.currentDraftId = draft.id;
   uiState.exportBundle = null;
+  saveContactName(draft.lenderName);
   saveContactName(draft.recipientName);
   saveState();
   render();
@@ -619,13 +638,22 @@ function generateDraft(formData) {
 
 function buildDraft(formData) {
   const kind = String(formData.get("kind") || "money");
-  const recipientName = String(formData.get("recipientName") || "").trim();
+  const role = String(formData.get("role") || "lend");
+  const partnerName = String(formData.get("partnerName") || "").trim();
+  const counterpartyName = String(formData.get("counterpartyName") || "").trim();
   const amount = Number(formData.get("amount") || 0);
   const itemName = String(formData.get("itemName") || "").trim();
   const note = String(formData.get("note") || "").trim();
+  const isBorrowFlow = role === "borrow";
+  const lenderName = isBorrowFlow ? partnerName : state.profile.name;
+  const recipientName = isBorrowFlow ? state.profile.name : counterpartyName;
 
+  if (!lenderName) {
+    uiState.lendMessage = isBorrowFlow ? "Verleihername fehlt." : "Dein Profilname fehlt.";
+    return null;
+  }
   if (!recipientName) {
-    uiState.lendMessage = "Empfängername fehlt.";
+    uiState.lendMessage = isBorrowFlow ? "Dein Profilname fehlt." : "Empfängername fehlt.";
     return null;
   }
   if (kind === "money" && amount <= 0) {
@@ -643,7 +671,8 @@ function buildDraft(formData) {
     operationCode: generateOperationCode(),
     kind,
     direction: "outgoing",
-    lenderName: state.profile.name,
+    role,
+    lenderName,
     recipientName,
     amount: kind === "money" ? amount : null,
     itemName: kind === "item" ? itemName : "",
